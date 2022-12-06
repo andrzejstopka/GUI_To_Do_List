@@ -8,6 +8,7 @@ all_tasks = []
 to_do_tasks = []
 
 
+
 class Task:
     done = False
 
@@ -26,6 +27,8 @@ Task("Odebrać Tymusia", "2023-01-08")
 
 
 def show_all_task():
+    for widget in display_frame.winfo_children():
+        widget.destroy()
     display_label["text"] = "All tasks"
     row_number = 0
     for task in all_tasks:
@@ -107,12 +110,57 @@ def add_task():
     ok_button.grid(column=0, row=0, padx=15, pady=(10, 20))
     cancel_button.grid(column=1, row=0, padx=15, pady=(10, 20))
 
+
 def delete_task():
-    delete_task_window = Toplevel()
+    style = ttk.Style()
+    style.configure("size.TCheckbutton", font=("arial", 15, "bold"))
+    style.configure("size.TButton", font=("arial", 12, "bold"))
+    to_delete = []
+
+    def select_task(task, variable):
+        if variable.get() == 1:
+            to_delete.append(task)
+        else:
+            to_delete.remove(task)
+
+    def create_checkbox(parent, task, row_number):
+        task_var = IntVar()
+        task_checkbox = ttk.Checkbutton(parent, text=f"{task.content} ({task.date})", style="size.TCheckbutton",
+                                        variable=task_var, onvalue=1, offvalue=0, command=lambda: select_task(task, task_var))
+        task_checkbox.grid(column=0, row=row_number, sticky=W, pady=5)
+
+    def tasks_list(task_frame):
+        global all_tasks
+        row_number = 0
+        for task in all_tasks:
+            create_checkbox(task_frame, task, row_number)
+            row_number += 1
     
+    def load(task_frame):
+        task_frame = ttk.Frame(delete_task_window)
+        task_frame.grid(column=0, row=0, padx=10, pady=15, ipadx=10, ipady=10)
+        tasks_list(task_frame)
+
+    def remove_tasks():
+        for x in to_delete:
+            all_tasks.remove(x)
+        delete_task_window.destroy()
+        show_all_task()
+
+    delete_task_window = Toplevel()
+    load(delete_task_window)
+    buttons_frame = ttk.Frame(delete_task_window)
+    remove_button = ttk.Button(buttons_frame, text="Delete", command=remove_tasks, style="size.TButton")
+    cancel_button = ttk.Button(buttons_frame, text="Cancel", command=delete_task_window.destroy, style="size.TButton")
+    buttons_frame.grid(column=0, row=1)
+    remove_button.grid(column=0, row=0, padx=10, pady=(0, 15))
+    cancel_button.grid(column=1, row=0, padx=10, pady=(0, 15))
+
+
+    
+
 window = Tk()
 # na koniec zmienić ścieżkę
-style = ttk.Style()
 window.tk.call("source", r"To-Do-List\GUI_To-Do-List\azure.tcl")
 window.tk.call("set_theme", "dark")
 window.title("To Do List")
@@ -121,7 +169,8 @@ display_label = ttk.Label(window, text="View content",
 display_frame = ttk.Frame(window)
 buttons_frame = ttk.Frame(window)
 add_task_button = ttk.Button(buttons_frame, text="Add Task", command=add_task)
-delete_task_button = ttk.Button(buttons_frame, text="Delete Task")
+delete_task_button = ttk.Button(
+    buttons_frame, text="Delete Task", command=delete_task)
 set_date_button = ttk.Button(buttons_frame, text="Set Task Date")
 get_done_button = ttk.Button(buttons_frame, text="Get Task Done")
 get_not_done_button = ttk.Button(buttons_frame, text="Get Task Not Done")
